@@ -25,7 +25,7 @@ LogManager.instance.logUpdated(
 <table>
     <tr>
         <td><img src="https://foruda.gitee.com/images/1737450328559903224/89f2f31b_854277.jpeg"/></td>
-        <td><img src="https://foruda.gitee.com/images/1737450509000636302/3e65687f_854277.jpeg"/></td>
+        <td><img src="https://foruda.gitee.com/images/1737452175723063338/1c963c21_854277.jpeg"/></td>
 	<td><img src="https://foruda.gitee.com/images/1737450524020963098/5bc33eeb_854277.jpeg"/></td>
     </tr>
 </table>

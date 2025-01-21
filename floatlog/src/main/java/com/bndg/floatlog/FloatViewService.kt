@@ -4,13 +4,14 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
+import android.util.Log
 
 /**
  * @author r
  * @date 2025/1/20
  * @description Brief description of the file content.
  */
-class FloatViewService: Service() {
+class FloatViewService : Service(), LogObserver {
 
     private var mFloatView: FloatView? = null
 
@@ -22,18 +23,9 @@ class FloatViewService: Service() {
         super.onCreate()
         mFloatView = FloatView(this)
         mFloatView?.show()
-        LogManager.instance.addObserver(object : LogObserver {
-            override fun onLogUpdated(logEvent: HttpLogEvent) {
-                onEvent(logEvent)
-            }
-        })
+        LogManager.instance.addObserver(this)
     }
 
-    fun onEvent(event: HttpLogEvent?) {
-        event?.let {
-            mFloatView?.setContent(it)
-        }
-    }
 
     class FloatViewServiceBinder : Binder() {
         fun getService(): FloatViewService {
@@ -43,6 +35,7 @@ class FloatViewService: Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        LogManager.instance.removeObserver(this)
         destroyFloat()
     }
 
@@ -51,5 +44,11 @@ class FloatViewService: Service() {
             mFloatView?.destroy()
         }
         mFloatView = null
+    }
+
+    override fun onLogUpdated(logEvent: HttpLogEvent) {
+        logEvent?.let {
+            mFloatView?.setContent(it)
+        }
     }
 }

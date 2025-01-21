@@ -242,7 +242,6 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
     }
 
     private fun showLog(s: String) {
-        Log.d(">>>>", s)
     }
 
     /**
