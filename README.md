@@ -22,6 +22,10 @@ LogManager.instance.logUpdated(
         )
 ```
 #### 截图
-<img src="https://foruda.gitee.com/images/1737450328559903224/89f2f31b_854277.jpeg" alt="输入图片说明" title="微信图片_20250121170405.jpg" style="zoom:25%;" align="left"/>
-<img src="https://foruda.gitee.com/images/1737450509000636302/3e65687f_854277.jpeg" alt="输入图片说明" title="微信图片_20250121170427.jpg" style="zoom:25%;" align="left"/>
-<img src="https://foruda.gitee.com/images/1737450524020963098/5bc33eeb_854277.jpeg" alt="输入图片说明" title="微信图片_20250121170431.jpg" style="zoom:25%;" align="left"/>
+<table>
+    <tr>
+        <td><img src="https://foruda.gitee.com/images/1737450328559903224/89f2f31b_854277.jpeg"/></td>
+        <td><img src="https://foruda.gitee.com/images/1737450509000636302/3e65687f_854277.jpeg"/></td>
+	<td><img src="https://foruda.gitee.com/images/1737450524020963098/5bc33eeb_854277.jpeg"/></td>
+    </tr>
+</table>
