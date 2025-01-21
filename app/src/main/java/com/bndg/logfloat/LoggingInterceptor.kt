@@ -113,7 +113,15 @@ class LoggingInterceptor : Interceptor {
         val hashValue = (url + requestBodyJson).hashCode()
 
         // 记录日志
-        LogManager.instance.logUpdated(HttpLogEvent(url, requestBodyJson, hashValue, results, accessToken))
+        LogManager.instance.logUpdated(
+            HttpLogEvent(
+                url,
+                requestBodyJson,
+                hashValue,
+                results,
+                accessToken
+            )
+        )
     }
 
     // 辅助方法：将参数字符串转换为 JSON 格式
@@ -124,7 +132,10 @@ class LoggingInterceptor : Interceptor {
         pairs.forEach { pair ->
             val keyValue = pair.split("=")
             val key = keyValue[0]
-            val value = if (keyValue.size > 1) keyValue[1] else "\"\""
+            val value = if (keyValue.size > 1) {
+                val s = URLDecoder.decode(keyValue[1], "UTF-8")
+                s
+            } else "\"\""
             jsonBuilder.append("\"$key\":$value\r\n")
         }
 
