@@ -1,6 +1,7 @@
 package com.bndg.logfloat
 
 import android.text.TextUtils
+import android.util.Log
 import com.bndg.floatlog.HttpLogEvent
 import com.bndg.floatlog.LogManager
 import okhttp3.Interceptor
@@ -25,19 +26,17 @@ class LoggingInterceptor : Interceptor {
         val request = chain.request()
         val orginUrl = request.url().toString()
 
-        // 忽略文件上传的请求
-        if (orginUrl.contains("file")) {
-            // 记录文件上传接口日志
-            sendEvent(request, "", orginUrl)
+        // 忽略某个接口日志
+     /*   if (orginUrl.contains("file")) {
             return chain.proceed(request)
-        }
-
+        }*/
         // 处理请求体
         val requestBody = request.body()
         val body = requestBody?.let { getBodyString(it) }
         requestBody?.let {
             if (!canLog(it.contentType())) {
-                //  忽略contentType
+                //  忽略的contentType
+                sendEvent(request, "", orginUrl)
                 return chain.proceed(request)
             }
         }

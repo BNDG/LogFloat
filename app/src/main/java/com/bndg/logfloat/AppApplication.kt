@@ -85,7 +85,6 @@ class AppApplication : Application() {
             }) // 设置请求重试次数
             .setRetryCount(1) // 设置请求重试时间
             .setRetryTime(2000) // 添加全局请求参数
-            .addParam("token", "6666666") // 添加全局请求头
             //.addHeader("date", "20191030")
             .into()
     }
