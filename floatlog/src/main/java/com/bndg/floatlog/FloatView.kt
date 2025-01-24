@@ -30,7 +30,6 @@ import android.text.Spanned
 import android.text.TextUtils
 import android.text.style.ForegroundColorSpan
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -43,6 +42,7 @@ import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.TranslateAnimation
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -94,7 +94,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
     private var nsv_scroll: NestedScrollView? = null
     private var tv_results: TextView? = null
     private var tv_toast: TextView? = null
-    private var etInput: EditText? = null
+    private var et_input: EditText? = null
     private var bt_back: View? = null
     private var mHandler: Handler? = null
 
@@ -142,7 +142,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
         // 设置图片格式，效果为背景透明
         mWmParams!!.format = PixelFormat.RGBA_8888
         // FLAG_NOT_TOUCH_MODAL 浮动窗口不会拦截所有触摸事件，它只响应自身的触摸事件。
-        // FLAG_NOT_FOCUSABLE 窗口不会获取焦点，也不会接收键盘输入。
+        // FLAG_NOT_FOCUSABLE 窗口不会获取焦点，也不会接收键盘输入。会拦截并阻止返回键的传递
         // FLAG_LAYOUT_IN_SCREEN 使窗口布局在整个屏幕范围内，而不是限制在父容器内。这通常用于确保窗口可以覆盖整个屏幕，包括状态栏和其他系统UI元素。
         // FLAG_FULLSCREEN 窗口会覆盖状态栏和导航栏，并填充整个屏幕。这通常用于隐藏状态栏和导航栏，只显示应用程序内容。
         // TYPE_SYSTEM_ERROR 这个窗口类型用于显示系统级别的错误信息。它会覆盖所有其他应用，并且通常具有较高的优先级。 需要 SYSTEM_ALERT_WINDOW 权限。
@@ -290,12 +290,26 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
         nsv_scroll = logViewMain?.findViewById(R.id.nsv_scroll)
         tv_results = logViewMain?.findViewById(R.id.tv_results)
         tv_toast = logViewMain?.findViewById(R.id.tv_toast)
-        etInput = logViewMain?.findViewById(R.id.et_log_search_input)
+        et_input = logViewMain?.findViewById(R.id.et_log_search_input)
         bt_back = logViewMain?.findViewById(R.id.bt_back)
         tv_clear = logViewMain?.findViewById(R.id.tv_clear)
         ll_search = logViewMain?.findViewById(R.id.ll_search)
         iv_up = logViewMain?.findViewById(R.id.iv_up)
         iv_down = logViewMain?.findViewById(R.id.iv_down)
+        et_input?.setOnEditorActionListener { v, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                hideSoftInput(et_input)
+                val keyword = et_input?.getText().toString()
+                val json = tv_results?.getText().toString()
+                if (!TextUtils.isEmpty(keyword) && !TextUtils.isEmpty(json)) {
+                    onSearch(keyword)
+                    findNextMatchAndScroll(keyword)
+                }
+                // 返回true表示我们已经处理了这个事件
+                return@setOnEditorActionListener true
+            }
+            false // 如果不是搜索动作，则返回false
+        }
         tv_results?.setOnLongClickListener(OnLongClickListener { v: View? ->
             OtherUtils.copyTextToBoard(context, tv_results?.getText().toString())
             showMsg("复制成功!")
@@ -304,11 +318,11 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
         bt_back?.setOnClickListener(OnClickListener {
             slideOutFromRight(nsv_scroll)
             slideInFromLeft(rv_content)
-            hideSoftInput(etInput)
+            hideSoftInput(et_input)
         })
         iv_up?.setOnClickListener(OnClickListener { v: View? ->
-            hideSoftInput(etInput)
-            val keyword = etInput?.getText().toString()
+            hideSoftInput(et_input)
+            val keyword = et_input?.getText().toString()
             val json = tv_results?.getText().toString()
             if (!TextUtils.isEmpty(keyword) && !TextUtils.isEmpty(json)) {
                 onSearch(keyword)
@@ -316,8 +330,8 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             }
         })
         iv_down?.setOnClickListener(OnClickListener { v: View? ->
-            hideSoftInput(etInput)
-            val keyword = etInput?.getText().toString()
+            hideSoftInput(et_input)
+            val keyword = et_input?.getText().toString()
             val json = tv_results?.getText().toString()
             if (!TextUtils.isEmpty(keyword) && !TextUtils.isEmpty(json)) {
                 onSearch(keyword)
@@ -340,7 +354,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
                 tv_results!!.postDelayed({
                     tv_clear!!.visibility = INVISIBLE
                     ll_search!!.visibility = VISIBLE
-                    etInput!!.setText("")
+                    et_input!!.setText("")
                     tv_results!!.text = format
                     matchIndexesMap.clear()
                 }, 300)
