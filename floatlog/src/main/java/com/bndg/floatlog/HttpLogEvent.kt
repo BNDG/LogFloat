@@ -11,7 +11,7 @@ class HttpLogEvent {
     var header: String? = null
     var url: String
     var params: String
-    var hashValue: Int
+    private var hashValue: Int
     var results: String
 
     constructor(url: String, par: String, hashValue: Int, results: String, header: String?) {

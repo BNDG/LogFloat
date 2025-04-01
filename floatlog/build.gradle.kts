@@ -16,7 +16,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 24
+        minSdk = 21
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -56,7 +56,7 @@ afterEvaluate {
             register<MavenPublication>("release") {
                 groupId = "io.github.bndg"
                 artifactId = "floatlog"
-                version = "1.0.0"
+                version = "1.0.1"
 
                 // 确保组件已初始化
                 from(components["release"])
@@ -113,7 +113,7 @@ afterEvaluate {
 medivhPublisher{
     groupId = "io.github.bndg"
     artifactId = "floatlog"
-    version = "1.0.0"
+    version = "1.0.1"
     pom{
         name = "floatlog"
         description = "android okhttp float log"
@@ -126,13 +126,13 @@ medivhPublisher{
         }
         developers {
             developer {
-                id = "id"
-                name = "name"
+                id = "bndg"
+                name = "bndg"
                 email = "email"
             }
         }
         scm {
-            connection = "scm:git:"
+            connection = "scm:git:https://github.com/BNDG/LogFloat.git"
             url = "https://github.com/BNDG/LogFloat"
         }
     }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="white">#ffffff</color>
-    <color name="bg_gray">#666666</color>
-    <color name="bg_blue">#007AFF</color>
-    <color name="header_color">#FFFFD700</color>
-    <color name="link_color">#ff00ddff</color>
-    <color name="params_color">#FFFFA500</color>
+    <color name="flog_white">#ffffff</color>
+    <color name="flog_bg_gray">#666666</color>
+    <color name="flog_bg_blue">#007AFF</color>
+    <color name="flog_header_color">#FFFFD700</color>
+    <color name="flog_link_color">#ff00ddff</color>
+    <color name="flog_params_color">#FFFFA500</color>
 </resources>

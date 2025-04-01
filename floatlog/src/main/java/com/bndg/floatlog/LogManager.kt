@@ -27,4 +27,8 @@ class LogManager private constructor() {
     fun logUpdated(logEvent: HttpLogEvent) {
         notifyObservers(logEvent)
     }
+
+    fun removeAllObserver() {
+        observers.clear()
+    }
 }

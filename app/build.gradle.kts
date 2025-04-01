@@ -48,7 +48,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.gson.factory)
 //    implementation(project(":floatlog"))
-    implementation("io.github.bndg:floatlog:1.0.0")
+    implementation("io.github.bndg:floatlog:1.0.1")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

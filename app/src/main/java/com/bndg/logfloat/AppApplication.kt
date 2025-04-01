@@ -11,11 +11,11 @@ import com.hjq.gson.factory.ParseExceptionCallback
 import com.hjq.http.EasyConfig
 import com.hjq.http.config.IRequestInterceptor
 import com.hjq.http.config.IRequestServer
+import com.hjq.http.model.HttpHeaders
+import com.hjq.http.model.HttpParams
 import com.hjq.http.request.HttpRequest
 import com.tencent.mmkv.BuildConfig
 import okhttp3.OkHttpClient
-import okhttp3.internal.http.HttpHeaders
-import org.apache.http.params.HttpParams
 
 
 /**
@@ -28,7 +28,7 @@ class AppApplication : Application() {
         super.onCreate()
         //初始化
         // 设置 Json 解析容错监听
-        GsonFactory.setParseExceptionCallback(object : ParseExceptionCallback  {
+        GsonFactory.setParseExceptionCallback(object : ParseExceptionCallback {
             override fun onParseObjectException(
                 typeToken: TypeToken<*>,
                 fieldName: String,
@@ -76,16 +76,17 @@ class AppApplication : Application() {
             .setServer(server) // 设置请求处理策略（必须设置）
             .setHandler(RequestHandler(this)) // 设置请求参数拦截器
             .setInterceptor(object : IRequestInterceptor {
-                fun interceptArguments(
+                override fun interceptArguments(
                     httpRequest: HttpRequest<*>,
                     params: HttpParams,
                     headers: HttpHeaders
                 ) {
+                    headers.put("token", "hhhhh")
                 }
             }) // 设置请求重试次数
             .setRetryCount(1) // 设置请求重试时间
             .setRetryTime(2000) // 添加全局请求参数
-            //.addHeader("date", "20191030")
+            .addHeader("jwt", "112233")
             .into()
     }
 }

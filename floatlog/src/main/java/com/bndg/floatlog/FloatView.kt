@@ -37,6 +37,7 @@ import android.view.View
 import android.view.View.OnClickListener
 import android.view.View.OnLongClickListener
 import android.view.View.OnTouchListener
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
@@ -65,44 +66,46 @@ import kotlin.math.min
 
 class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
     private val HANDLER_TYPE_HIDE_LOGO = 100 //隐藏view
-    private var mWmParams: WindowManager.LayoutParams? = null
     private var mWindowManager: WindowManager? = null
-    private var mCanHide = false //是否允许隐藏
     private var mTouchStartX = 0f
     private var mTouchStartY = 0f
     private var mScreenWidth = 0f
     private var mScreenHeight = 0f
-    private var mDraging = false
-
-    private var rootFloatView: View? = null
+    // 悬浮窗按钮
+    private var floatingView: View? = null
     private var floatViewWidth = 0
     private var floatViewHeight = 0
-    private var TRANSLATE_TOLEFT = false
-
+    private var mFlvLayoutParams: WindowManager.LayoutParams? = null
+    // 根布局
     private var mContainView: LinearLayout? = null
+    // 日志主布局
     private var logViewMain: View? = null
     private var translateX: ObjectAnimator? = null
+    private var mCanHide = false //是否允许隐藏
+    private var mDraging = false //是否正在拖动
     private var mCanClose = false
-    private var rv_content: RecyclerView? = null
+    private var translateLeft = false
+    private var rvApiList: RecyclerView? = null
     private var mAdapter: HttpLogAdapter? = null
-    private var tv_clear: View? = null
-    private var ll_search: View? = null
-    private var v_outside: View? = null
-    private var iv_up: View? = null
-    private var iv_down: View? = null
-    private var fl_contain: FrameLayout? = null
-    private var nsv_scroll: NestedScrollView? = null
-    private var tv_results: TextView? = null
-    private var tv_toast: TextView? = null
-    private var et_input: EditText? = null
-    private var bt_back: View? = null
+    private var tvClear: View? = null
+    private var llSearch: View? = null
+    private var vOutside: View? = null
+    private var ivUp: View? = null
+    private var ivDown: View? = null
+    private var ivClear: View? = null
+    private var tvLogSearchCount: TextView? = null
+    private var nsvScroll: NestedScrollView? = null
+    private var tvResults: TextView? = null
+    private var tvToast: TextView? = null
+    private var etInput: EditText? = null
+    private var btBack: View? = null
     private var mHandler: Handler? = null
 
-    // 搜索相关
+    // 搜索相关 关键字和搜索到的索引
     private val matchIndexesMap = HashMap<String, List<Int>?>()
+    // 总匹配个数
+    private var totalCount: Int = 0
     private var currentIndex = -1 // 当前选中的匹配项索引
-    private var fadeOut: AlphaAnimation? = null
-    private var logEvents: ArrayList<HttpLogEvent>? = null
 
     init {
         init(context)
@@ -117,7 +120,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
                         // 执行隐藏悬浮窗的逻辑
                         if (mCanHide) {
                             mCanHide = false
-                            if (TRANSLATE_TOLEFT) {
+                            if (translateLeft) {
                                 translateX((-floatViewWidth / 1.2).toFloat(), 500)
                             } else {
                                 translateX((floatViewWidth / 1.2).toFloat(), 500)
@@ -132,15 +135,15 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
     private fun init(mContext: Context) {
         mWindowManager = mContext.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         updateScreenSize()
-        this.mWmParams = WindowManager.LayoutParams()
+        this.mFlvLayoutParams = WindowManager.LayoutParams()
         // 设置窗体显示类型
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mWmParams!!.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+            mFlvLayoutParams!!.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
         } else {
-            mWmParams!!.type = WindowManager.LayoutParams.TYPE_PHONE
+            mFlvLayoutParams!!.type = WindowManager.LayoutParams.TYPE_PHONE
         }
         // 设置图片格式，效果为背景透明
-        mWmParams!!.format = PixelFormat.RGBA_8888
+        mFlvLayoutParams!!.format = PixelFormat.RGBA_8888
         // FLAG_NOT_TOUCH_MODAL 浮动窗口不会拦截所有触摸事件，它只响应自身的触摸事件。
         // FLAG_NOT_FOCUSABLE 窗口不会获取焦点，也不会接收键盘输入。会拦截并阻止返回键的传递
         // FLAG_LAYOUT_IN_SCREEN 使窗口布局在整个屏幕范围内，而不是限制在父容器内。这通常用于确保窗口可以覆盖整个屏幕，包括状态栏和其他系统UI元素。
@@ -152,14 +155,15 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
 //        WindowManager.LayoutParams.FLAG_ALT_FOCUSABLE_IM
-        mWmParams!!.flags = flags
+        mFlvLayoutParams!!.flags = flags
         // 调整悬浮窗显示的停靠位置为左侧置顶
-        mWmParams!!.gravity = Gravity.LEFT or Gravity.TOP
+        mFlvLayoutParams!!.gravity = Gravity.LEFT or Gravity.TOP
         // 设置悬浮窗口长宽数据
-        mWmParams!!.width = LayoutParams.WRAP_CONTENT
-        mWmParams!!.height = LayoutParams.WRAP_CONTENT
+        mFlvLayoutParams!!.width = LayoutParams.WRAP_CONTENT
+        mFlvLayoutParams!!.height = LayoutParams.WRAP_CONTENT
+        mFlvLayoutParams!!.x = mScreenWidth.toInt()
         addView(createFloatView(mContext))
-        mWindowManager!!.addView(this, mWmParams)
+        mWindowManager!!.addView(this, mFlvLayoutParams)
         createContainView(mContext)
         mWindowManager!!.addView(mContainView, createParams())
         mContainView!!.setOnTouchListener { v: View?, event: MotionEvent ->
@@ -170,6 +174,9 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
         }
     }
 
+    /**
+     * 更新屏幕尺寸
+     */
     private fun updateScreenSize() {
         val displayMetrics = DisplayMetrics()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -193,20 +200,20 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
      */
     private fun updatePosition(currentX: Int) {
         if (currentX >= mScreenWidth / 2) {
-            TRANSLATE_TOLEFT = false
-            mWmParams!!.x = (mScreenWidth - floatViewWidth).toInt()
+            translateLeft = false
+            mFlvLayoutParams!!.x = (mScreenWidth - floatViewWidth).toInt()
         } else if (currentX < mScreenWidth / 2) {
-            TRANSLATE_TOLEFT = true
-            mWmParams!!.x = 0
+            translateLeft = true
+            mFlvLayoutParams!!.x = 0
         }
-        mWindowManager!!.updateViewLayout(this, mWmParams)
+        mWindowManager!!.updateViewLayout(this, mFlvLayoutParams)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         // 记录当前屏幕方向转换前的宽高和悬浮窗的位置
-        val oldX = mWmParams!!.x
-        val oldY = mWmParams!!.y
+        val oldX = mFlvLayoutParams!!.x
+        val oldY = mFlvLayoutParams!!.y
         val displayPositionX = oldX / mScreenWidth
         val displayPositionY = oldY / mScreenHeight
         // 更新屏幕大小
@@ -216,29 +223,29 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             Configuration.ORIENTATION_LANDSCAPE -> {
                 showLog("横屏 $oldX <> $oldY")
                 // 计算新位置
-                mWmParams!!.x = (displayPositionX * mScreenWidth).toInt()
-                mWmParams!!.y = (displayPositionY * mScreenHeight).toInt()
+                mFlvLayoutParams!!.x = (displayPositionX * mScreenWidth).toInt()
+                mFlvLayoutParams!!.y = (displayPositionY * mScreenHeight).toInt()
 
                 // 确保位置不会超出屏幕范围
-                mWmParams!!.x = mWmParams!!.x.coerceIn(0, (mScreenWidth - floatViewWidth).toInt())
-                mWmParams!!.y = mWmParams!!.y.coerceIn(0, (mScreenHeight - floatViewHeight).toInt())
+                mFlvLayoutParams!!.x = mFlvLayoutParams!!.x.coerceIn(0, (mScreenWidth - floatViewWidth).toInt())
+                mFlvLayoutParams!!.y = mFlvLayoutParams!!.y.coerceIn(0, (mScreenHeight - floatViewHeight).toInt())
             }
 
             Configuration.ORIENTATION_PORTRAIT -> {
                 showLog("竖屏 $oldX <> $oldY")
 
                 // 计算新位置
-                mWmParams!!.x = (displayPositionX * mScreenWidth).toInt()
-                mWmParams!!.y = (displayPositionY * mScreenHeight).toInt()
+                mFlvLayoutParams!!.x = (displayPositionX * mScreenWidth).toInt()
+                mFlvLayoutParams!!.y = (displayPositionY * mScreenHeight).toInt()
 
                 // 确保位置不会超出屏幕范围
-                mWmParams!!.x = mWmParams!!.x.coerceIn(0, (mScreenWidth - floatViewWidth).toInt())
-                mWmParams!!.y = mWmParams!!.y.coerceIn(0, (mScreenHeight - floatViewHeight).toInt())
+                mFlvLayoutParams!!.x = mFlvLayoutParams!!.x.coerceIn(0, (mScreenWidth - floatViewWidth).toInt())
+                mFlvLayoutParams!!.y = mFlvLayoutParams!!.y.coerceIn(0, (mScreenHeight - floatViewHeight).toInt())
             }
         }
 
         // 更新悬浮窗的布局
-        mWindowManager!!.updateViewLayout(this, mWmParams)
+        mWindowManager!!.updateViewLayout(this, mFlvLayoutParams)
     }
 
     private fun showLog(s: String) {
@@ -252,9 +259,9 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
      */
     private fun createFloatView(context: Context): View? {
         // 从布局文件获取浮动窗口视图
-        rootFloatView = LayoutInflater.from(context).inflate(R.layout.float_view_widget, null)
-        rootFloatView?.setOnTouchListener(this)
-        rootFloatView?.setOnClickListener(OnClickListener {
+        floatingView = LayoutInflater.from(context).inflate(R.layout.float_view_widget, null)
+        floatingView?.setOnTouchListener(this)
+        floatingView?.setOnClickListener(OnClickListener {
             if (mCanHide && !mDraging) {
                 if (mContainView!!.visibility == INVISIBLE) {
                     mContainView!!.visibility = VISIBLE
@@ -262,16 +269,16 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
                 }
             }
         })
-        rootFloatView?.measure(
+        floatingView?.measure(
             MeasureSpec.makeMeasureSpec(
                 0,
                 MeasureSpec.UNSPECIFIED
             ), MeasureSpec
                 .makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
         )
-        floatViewWidth = rootFloatView?.measuredWidth ?: 0
-        floatViewHeight = rootFloatView?.measuredHeight ?: 0
-        return rootFloatView
+        floatViewWidth = floatingView?.measuredWidth ?: 0
+        floatViewHeight = floatingView?.measuredHeight ?: 0
+        return floatingView
     }
 
     /**
@@ -281,26 +288,33 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
     private fun createContainView(context: Context) {
         val inflater = LayoutInflater.from(context)
         mContainView = inflater.inflate(R.layout.float_view_contain, null) as LinearLayout
-        fl_contain = mContainView!!.findViewById(R.id.fl_contain)
-        v_outside = mContainView!!.findViewById(R.id.fl_outside)
-        v_outside?.setOnClickListener({ closeContentView() })
+        var flContain:ViewGroup = mContainView!!.findViewById(R.id.fl_contain)
+        vOutside = mContainView!!.findViewById(R.id.fl_outside)
+        vOutside?.setOnClickListener { closeContentView() }
         logViewMain = inflater.inflate(R.layout.float_view_home, null)
         mContainView!!.visibility = INVISIBLE
-        rv_content = logViewMain?.findViewById(R.id.rv_content)
-        nsv_scroll = logViewMain?.findViewById(R.id.nsv_scroll)
-        tv_results = logViewMain?.findViewById(R.id.tv_results)
-        tv_toast = logViewMain?.findViewById(R.id.tv_toast)
-        et_input = logViewMain?.findViewById(R.id.et_log_search_input)
-        bt_back = logViewMain?.findViewById(R.id.bt_back)
-        tv_clear = logViewMain?.findViewById(R.id.tv_clear)
-        ll_search = logViewMain?.findViewById(R.id.ll_search)
-        iv_up = logViewMain?.findViewById(R.id.iv_up)
-        iv_down = logViewMain?.findViewById(R.id.iv_down)
-        et_input?.setOnEditorActionListener { v, actionId, event ->
+        rvApiList = logViewMain?.findViewById(R.id.rv_content)
+        nsvScroll = logViewMain?.findViewById(R.id.nsv_scroll)
+        tvResults = logViewMain?.findViewById(R.id.tv_results)
+        tvToast = logViewMain?.findViewById(R.id.tv_toast)
+        etInput = logViewMain?.findViewById(R.id.et_log_search_input)
+        tvLogSearchCount = logViewMain?.findViewById(R.id.tv_log_search_count)
+        btBack = logViewMain?.findViewById(R.id.bt_back)
+        tvClear = logViewMain?.findViewById(R.id.tv_clear)
+        llSearch = logViewMain?.findViewById(R.id.ll_search)
+        ivUp = logViewMain?.findViewById(R.id.iv_up)
+        ivDown = logViewMain?.findViewById(R.id.iv_down)
+        ivClear = logViewMain?.findViewById(R.id.iv_clear)
+        ivClear?.setOnClickListener(OnClickListener {
+            etInput?.setText("")
+            tvLogSearchCount?.text = ""
+            showSoftInput(etInput)
+        })
+        etInput?.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                hideSoftInput(et_input)
-                val keyword = et_input?.getText().toString()
-                val json = tv_results?.getText().toString()
+                hideSoftInput(etInput)
+                val keyword = etInput?.text.toString()
+                val json = tvResults?.text.toString()
                 if (!TextUtils.isEmpty(keyword) && !TextUtils.isEmpty(json)) {
                     onSearch(keyword)
                     findNextMatchAndScroll(keyword)
@@ -310,52 +324,51 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             }
             false // 如果不是搜索动作，则返回false
         }
-        tv_results?.setOnLongClickListener(OnLongClickListener { v: View? ->
-            OtherUtils.copyTextToBoard(context, tv_results?.getText().toString())
+        tvResults?.setOnLongClickListener(OnLongClickListener { v: View? ->
+            OtherUtils.copyTextToBoard(context, tvResults?.getText().toString())
             showMsg("复制成功!")
             true
         })
-        bt_back?.setOnClickListener(OnClickListener {
-            slideOutFromRight(nsv_scroll)
-            slideInFromLeft(rv_content)
-            hideSoftInput(et_input)
+        btBack?.setOnClickListener(OnClickListener {
+            slideOutFromRight(nsvScroll)
+            slideInFromLeft(rvApiList)
+            hideSoftInput(etInput)
         })
-        iv_up?.setOnClickListener(OnClickListener { v: View? ->
-            hideSoftInput(et_input)
-            val keyword = et_input?.getText().toString()
-            val json = tv_results?.getText().toString()
+        ivUp?.setOnClickListener(OnClickListener { v: View? ->
+            hideSoftInput(etInput)
+            val keyword = etInput?.text.toString()
+            val json = tvResults?.text.toString()
             if (!TextUtils.isEmpty(keyword) && !TextUtils.isEmpty(json)) {
                 onSearch(keyword)
                 findPreviousMatchAndScroll(keyword)
             }
         })
-        iv_down?.setOnClickListener(OnClickListener { v: View? ->
-            hideSoftInput(et_input)
-            val keyword = et_input?.getText().toString()
-            val json = tv_results?.getText().toString()
+        ivDown?.setOnClickListener(OnClickListener { v: View? ->
+            hideSoftInput(etInput)
+            val keyword = etInput?.text.toString()
+            val json = tvResults?.text.toString()
             if (!TextUtils.isEmpty(keyword) && !TextUtils.isEmpty(json)) {
                 onSearch(keyword)
                 findNextMatchAndScroll(keyword)
             }
         })
-        logEvents = ArrayList()
-        tv_clear?.setOnClickListener { v: View? ->
-            logEvents!!.clear()
+        tvClear?.setOnClickListener { v: View? ->
             mAdapter!!.notifyDataSetChanged()
         }
-        rv_content?.setLayoutManager(LinearLayoutManager(context))
-        mAdapter = HttpLogAdapter(logEvents!!, { event: HttpLogEvent ->
+        rvApiList?.setLayoutManager(LinearLayoutManager(context))
+        mAdapter = HttpLogAdapter(mutableListOf(), { event: HttpLogEvent ->
             if (!TextUtils.isEmpty(event.results)) {
                 val format = formatJson(event.results)
-                nsv_scroll?.scrollTo(0, 0)
+                nsvScroll?.scrollTo(0, 0)
                 // 显示请求内容
-                slideOutFromLeft(rv_content!!)
-                slideInFromRight(nsv_scroll!!)
-                tv_results!!.postDelayed({
-                    tv_clear!!.visibility = INVISIBLE
-                    ll_search!!.visibility = VISIBLE
-                    et_input!!.setText("")
-                    tv_results!!.text = format
+                slideOutFromLeft(rvApiList!!)
+                slideInFromRight(nsvScroll!!)
+                tvResults!!.postDelayed({
+                    tvClear!!.visibility = INVISIBLE
+                    llSearch!!.visibility = VISIBLE
+                    etInput!!.setText("")
+                    tvLogSearchCount?.text = ""
+                    tvResults!!.text = format
                     matchIndexesMap.clear()
                 }, 300)
             }
@@ -372,8 +385,15 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
                 }
             }
         })
-        rv_content?.setAdapter(mAdapter)
-        fl_contain?.addView(logViewMain)
+        rvApiList?.setAdapter(mAdapter)
+        flContain.addView(logViewMain)
+    }
+
+    private fun showSoftInput(view: View?) {
+        val imm =
+            view!!.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                ?: return
+        imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY)
     }
 
     private fun hideSoftInput(view: View?) {
@@ -384,33 +404,35 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
     }
 
     private fun showMsg(s: String) {
-        tv_toast!!.text = s
-        tv_toast!!.alpha = 1f
-        tv_toast!!.visibility = VISIBLE
+        tvToast!!.text = s
+        tvToast!!.alpha = 1f
+        tvToast!!.visibility = VISIBLE
         // 延迟1秒后开始动画
-        tv_toast?.postDelayed({ // 创建渐变动画，透明度从 1 到 0
-            fadeOut = AlphaAnimation(1.0f, 0.0f)
-            fadeOut!!.duration = 1000 // 动画持续1秒
-            fadeOut!!.fillAfter = false // 动画结束后保持最终状态
+        tvToast?.postDelayed({ // 创建渐变动画，透明度从 1 到 0
+            var fadeOut = AlphaAnimation(1.0f, 0.0f)
+            fadeOut.duration = 1000 // 动画持续1秒
+            fadeOut.fillAfter = false // 动画结束后保持最终状态
             // 设置动画监听器，在动画结束时隐藏 TextView
-            fadeOut!!.setAnimationListener(object : Animation.AnimationListener {
+            fadeOut.setAnimationListener(object : Animation.AnimationListener {
                 override fun onAnimationStart(animation: Animation) {
                 }
 
                 override fun onAnimationEnd(animation: Animation) {
-                    tv_toast!!.visibility = GONE // 动画结束后隐藏 TextView
+                    tvToast!!.visibility = GONE // 动画结束后隐藏 TextView
                 }
 
                 override fun onAnimationRepeat(animation: Animation) {
                 }
             })
-            tv_toast!!.startAnimation(fadeOut)
+            tvToast!!.startAnimation(fadeOut)
         }, 1000) // 延迟1秒后执行动画
     }
 
     // 初始化或重新搜索时调用此方法以构建匹配项列表
     private fun buildMatchIndexes(json: String, keyword: String) {
+        // 如果已经存在该关键字的匹配项列表，则无需再次构建
         if (matchIndexesMap[keyword] != null) {
+            totalCount = matchIndexesMap[keyword]!!.size
             return
         }
         val matchIndexes: MutableList<Int> = ArrayList()
@@ -426,35 +448,42 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
         }
         if (matchIndexes.isEmpty()) {
             showMsg("没有找到匹配项!")
+            tvLogSearchCount?.text = ""
+        } else {
+            totalCount = matchIndexes.size
         }
         matchIndexesMap[keyword] = matchIndexes
     }
 
     // 查找下一个匹配项并滚动到该位置
-    fun findNextMatchAndScroll(keyword: String) {
+    private fun findNextMatchAndScroll(keyword: String) {
         val matchIndexes = matchIndexesMap[keyword]
-        if (matchIndexes == null || matchIndexes.isEmpty()) {
+        if (matchIndexes.isNullOrEmpty()) {
             return
         }
         currentIndex = (currentIndex + 1) % matchIndexes.size // 循环到最后一个后回到第一个
+        tvLogSearchCount?.text =
+            context.getString(R.string.flog_search_count, currentIndex + 1, totalCount)
         scrollToMatch(matchIndexes[currentIndex])
     }
 
     // 查找上一个匹配项并滚动到该位置
-    fun findPreviousMatchAndScroll(keyword: String) {
+    private fun findPreviousMatchAndScroll(keyword: String) {
         val matchIndexes = matchIndexesMap[keyword]
-        if (matchIndexes == null || matchIndexes.isEmpty()) {
+        if (matchIndexes.isNullOrEmpty()) {
             return
         }
         currentIndex = (currentIndex - 1 + matchIndexes.size) % matchIndexes.size // 循环到第一个前回到最后一个
+        tvLogSearchCount?.text =
+            context.getString(R.string.flog_search_count, currentIndex + 1, totalCount)
         scrollToMatch(matchIndexes[currentIndex])
     }
 
     // 滚动到指定匹配项
     private fun scrollToMatch(matchIndex: Int) {
-        tv_results!!.post {
-            val layout = tv_results!!.layout
-            if (layout == null || tv_results!!.text.length <= matchIndex) return@post
+        tvResults!!.post {
+            val layout = tvResults!!.layout
+            if (layout == null || tvResults!!.text.length <= matchIndex) return@post
 
             // 获取匹配项所在的行号
             val line = layout.getLineForOffset(matchIndex)
@@ -471,7 +500,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
 
             // 确保新的滚动位置不会超出 ScrollView 的边界
             val totalHeight = layout.height // 文档总高度
-            val scrollViewHeight = nsv_scroll!!.height // ScrollView 的可见高度
+            val scrollViewHeight = nsvScroll!!.height // ScrollView 的可见高度
             val maxScrollY = max(0.0, (totalHeight - scrollViewHeight).toDouble())
                 .toInt() // 最大滚动位置
 
@@ -480,7 +509,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             newScrollY = max(newScrollY.toDouble(), 0.0).toInt()
             showLog("Calculated Scroll Y: $newScrollY")
             // 使用 smoothScrollTo 来确保滚动是平滑的
-            nsv_scroll!!.smoothScrollTo(0, newScrollY)
+            nsvScroll!!.smoothScrollTo(0, newScrollY)
         }
     }
 
@@ -505,14 +534,14 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
     }
 
     // 在初始化界面或用户输入新的关键词时调用
-    fun onSearch(keyword: String) {
-        val result = tv_results!!.text.toString()
+    private fun onSearch(keyword: String) {
+        val result = tvResults!!.text.toString()
         if (!TextUtils.isEmpty(keyword) && !TextUtils.isEmpty(result)) {
             buildMatchIndexes(result, keyword)
             val highlightedJson = highlightKeyword(result, keyword)
-            tv_results!!.text = highlightedJson // 直接设置 SpannableStringBuilder 给 TextView
+            tvResults!!.text = highlightedJson // 直接设置 SpannableStringBuilder 给 TextView
         } else {
-            tv_results!!.text = result // 如果没有关键词则不进行高亮
+            tvResults!!.text = result // 如果没有关键词则不进行高亮
         }
     }
 
@@ -548,7 +577,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             }
 
             override fun onAnimationEnd(animation: Animator) {
-                bt_back!!.visibility = VISIBLE
+                btBack!!.visibility = VISIBLE
             }
 
             override fun onAnimationCancel(animation: Animator) {
@@ -571,9 +600,9 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             }
 
             override fun onAnimationEnd(animation: Animator) {
-                bt_back!!.visibility = INVISIBLE
-                ll_search!!.visibility = INVISIBLE
-                tv_clear!!.visibility = VISIBLE
+                btBack!!.visibility = INVISIBLE
+                llSearch!!.visibility = INVISIBLE
+                tvClear!!.visibility = VISIBLE
             }
 
             override fun onAnimationCancel(animation: Animator) {
@@ -634,7 +663,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
         contentView!!.startAnimation(animation)
     }
 
-    fun createParams(): WindowManager.LayoutParams {
+    private fun createParams(): WindowManager.LayoutParams {
         val newParams = WindowManager.LayoutParams()
         // 设置window type
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -686,13 +715,13 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
                     mDraging = true
                 }
                 // 更新浮动窗口位置参数
-                mWmParams!!.x = (x - mTouchStartX).toInt()
-                mWmParams!!.y = (y - mTouchStartY).toInt()
-                mWindowManager!!.updateViewLayout(this, mWmParams)
+                mFlvLayoutParams!!.x = (x - mTouchStartX).toInt()
+                mFlvLayoutParams!!.y = (y - mTouchStartY).toInt()
+                mWindowManager!!.updateViewLayout(this, mFlvLayoutParams)
             }
 
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                updatePosition(mWmParams!!.x)
+                updatePosition(mFlvLayoutParams!!.x)
                 timerForHide()
                 run {
                     mTouchStartY = 0f
@@ -732,7 +761,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             override fun onAnimationRepeat(animation: Animator) {
             }
         })
-        TRANSLATE_TOLEFT = !TRANSLATE_TOLEFT
+        translateLeft = !translateLeft
     }
 
     private fun removeFloatView() {
@@ -752,8 +781,8 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
      * 显示悬浮窗
      */
     fun show() {
-        mWmParams?.y = (mScreenHeight / 4).toInt()
-        updatePosition(mWmParams!!.x)
+        mFlvLayoutParams?.y = (mScreenHeight / 4).toInt()
+        updatePosition(mFlvLayoutParams!!.x)
         timerForHide()
     }
 
@@ -779,6 +808,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
         showLog("销毁了.......")
         removeFloatView()
         mHandler?.removeCallbacksAndMessages(null)
+        mHandler = null
     }
 
     fun setContent(event: HttpLogEvent) {

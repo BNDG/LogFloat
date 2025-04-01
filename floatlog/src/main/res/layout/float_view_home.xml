@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_gray"
+    android:background="@color/flog_bg_gray"
     android:gravity="center_horizontal"
     android:paddingLeft="2dp"
     android:paddingRight="2dp">
@@ -15,8 +15,9 @@
         android:gravity="center"
         android:padding="10dp"
         android:text="清除日志"
-        android:textColor="@color/white"
-        android:textSize="15sp" />
+        android:textColor="@color/flog_white"
+        android:textSize="15sp"
+        tools:visibility="invisible" />
 
     <LinearLayout
         android:id="@+id/ll_search"
@@ -24,7 +25,8 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="horizontal"
-        android:visibility="invisible">
+        android:visibility="invisible"
+        tools:visibility="visible">
 
         <LinearLayout
             android:layout_width="0px"
@@ -34,7 +36,7 @@
             android:layout_marginRight="5dp"
             android:layout_marginBottom="5dp"
             android:layout_weight="1"
-            android:background="@drawable/logcat_bg_log_frame"
+            android:background="@drawable/flog_bg_log_frame"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
@@ -50,9 +52,9 @@
                 android:drawablePadding="15dp"
                 android:hint="输入要查找的关键字"
                 android:imeOptions="actionSearch"
+                android:maxLines="1"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:maxLines="1"
                 android:singleLine="true"
                 android:textAllCaps="false"
                 android:textColor="@android:color/white"
@@ -61,38 +63,45 @@
                 android:textSize="13sp"
                 tools:ignore="NestedWeights" />
 
-            <ImageView
-                android:id="@+id/iv_log_search_icon"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginRight="10dp"
-                android:src="@drawable/baseline_clear_24"
-                android:visibility="gone"
-                tools:visibility="visible" />
+            <TextView
+                android:id="@+id/tv_log_search_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp"
+                android:textColor="@color/flog_white"
+                tools:text="11/20" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/iv_clear"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:paddingLeft="5dp"
+            android:src="@drawable/flog_baseline_clear_24"
+            tools:visibility="visible" />
 
         <ImageView
             android:id="@+id/iv_up"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:paddingLeft="5dp"
-            android:src="@drawable/baseline_arrow_upward_24" />
+            android:src="@drawable/flog_baseline_arrow_upward_24" />
 
         <ImageView
             android:id="@+id/iv_down"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:paddingLeft="5dp"
-            android:src="@drawable/baseline_arrow_downward_24" />
+            android:src="@drawable/flog_baseline_arrow_downward_24" />
 
     </LinearLayout>
-
 
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_below="@+id/ll_search"
-        android:background="@color/white" />
+        android:background="@color/flog_white" />
 
     <Button
         android:id="@+id/bt_back"
@@ -115,7 +124,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
-            android:textColor="@color/white"
+            android:textColor="@color/flog_white"
             android:textSize="15sp"
             tools:text="2341132\nafd2341132\nafd2341132\nafd" />
 
@@ -126,15 +135,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/ll_search"
-        android:layout_marginTop="10dp"
-        android:background="@color/bg_gray" />
+        android:layout_marginTop="10dp" />
 
     <TextView
         android:id="@+id/tv_toast"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:background="@drawable/shape_round_white"
+        android:background="@drawable/flog_shape_round_white"
         android:paddingLeft="12dp"
         android:paddingTop="5dp"
         android:paddingRight="12dp"

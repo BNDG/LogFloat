@@ -18,9 +18,9 @@ class HttpLogAdapter(
 
     // 3. 创建 ViewHolder
     class SimpleViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val tv_url: TextView = itemView.findViewById(R.id.tv_url)
-        val tv_params: TextView = itemView.findViewById(R.id.tv_params)
-        val tv_header: TextView = itemView.findViewById(R.id.tv_header)
+        val tvUrl: TextView = itemView.findViewById(R.id.tv_url)
+        val tvParams: TextView = itemView.findViewById(R.id.tv_params)
+        val tvHeader: TextView = itemView.findViewById(R.id.tv_header)
     }
 
     // 4. 创建 ViewHolder 实例并返回
@@ -38,31 +38,32 @@ class HttpLogAdapter(
     // 5. 绑定数据
     override fun onBindViewHolder(holder: SimpleViewHolder, position: Int) {
         val currentHttpLogEvent = logEvents[position]
-        holder.tv_url.text = currentHttpLogEvent.url
-        holder.tv_params.text = currentHttpLogEvent.params
-        holder.tv_header.text = "{\"accessToken\":\"" + currentHttpLogEvent.header + "\"}"
+        holder.tvUrl.text = currentHttpLogEvent.url
+        holder.tvParams.text = currentHttpLogEvent.params
         if (currentHttpLogEvent.header?.isNotEmpty() == true) {
-            holder.tv_header.visibility = View.VISIBLE
+            val headerWithoutNewlines = currentHttpLogEvent.header!!.replace("[\n\r]+$".toRegex(), "")
+            holder.tvHeader.text = headerWithoutNewlines
+            holder.tvHeader.visibility = View.VISIBLE
         } else {
-            holder.tv_header.visibility = View.GONE
+            holder.tvHeader.visibility = View.GONE
         }
         // 设置点击监听
-        holder.tv_url.setOnClickListener {
+        holder.tvUrl.setOnClickListener {
             onItemClick(currentHttpLogEvent) // 执行点击回调
         }
 
-        holder.tv_params.setOnClickListener {
+        holder.tvParams.setOnClickListener {
             onItemClick(currentHttpLogEvent) // 执行点击回调
         }
 
         // 设置长按监听
-        holder.tv_url.setOnLongClickListener {
-            onItemLongClick(holder.tv_url, currentHttpLogEvent) // 执行长按回调
+        holder.tvUrl.setOnLongClickListener {
+            onItemLongClick(holder.tvUrl, currentHttpLogEvent) // 执行长按回调
             true // 返回 true 表示长按事件已被消费
         }
 
-        holder.tv_params.setOnLongClickListener {
-            onItemLongClick(holder.tv_params, currentHttpLogEvent) // 执行长按回调
+        holder.tvParams.setOnLongClickListener {
+            onItemLongClick(holder.tvParams, currentHttpLogEvent) // 执行长按回调
             true // 返回 true 表示长按事件已被消费
         }
     }

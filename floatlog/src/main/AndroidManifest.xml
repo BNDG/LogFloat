@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!--    Android 13 开始，当应用尝试发送通知时，如果尚未获得“通知”权限-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application>
         <service android:name="com.bndg.floatlog.FloatViewService" />
+        <receiver
+            android:name=".FlogNotificationRemovedReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.NOTIFICATION_DELETED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

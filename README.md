@@ -6,10 +6,10 @@
 - 仅用于测试环境。
 
 #### 使用说明
-
-1.  okhttp addInterceptor（示例中有个LoggingInterceptor）
-2. start FloatViewService (需要悬浮窗权限）
-2. 在Interceptor中，按需发送数据到悬浮窗
+> module引入或者implementation("io.github.bndg:floatlog:1.0.1")
+1. okhttp addInterceptor（示例中有个LoggingInterceptor）
+2. start FloatViewService (启动前台服务需要判断系统版本）
+3. 在Interceptor中，按需发送数据到悬浮窗
 ``` kotlin
 LogManager.instance.logUpdated(
             HttpLogEvent(
@@ -17,15 +17,15 @@ LogManager.instance.logUpdated(
                 requestBodyJson,
                 hashValue,
                 results,
-                accessToken
+                headers.toString()
             )
         )
 ```
 #### 截图
 <table>
     <tr>
-        <td><img src="https://foruda.gitee.com/images/1737450328559903224/89f2f31b_854277.jpeg"/></td>
-        <td><img src="https://foruda.gitee.com/images/1737452175723063338/1c963c21_854277.jpeg"/></td>
-	<td><img src="https://foruda.gitee.com/images/1737450524020963098/5bc33eeb_854277.jpeg"/></td>
+        <td><img src="./screenshot/1.jpg"/></td>
+        <td><img src="./screenshot/2.jpg"/></td>
+	<td><img src="./screenshot/3.jpg"/></td>
     </tr>
 </table>

@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp"
-        android:textColor="@color/link_color"
+        android:textColor="@color/flog_link_color"
         android:textSize="14sp"
         tools:text="asdfasdf/asdfasdf" />
 
@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="3dp"
-        android:textColor="@color/header_color"
+        android:textColor="@color/flog_header_color"
         android:textSize="13sp"
         android:visibility="gone"
         tools:visibility="visible"
@@ -30,7 +30,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="5dp"
-        android:textColor="@color/params_color"
+        android:textColor="@color/flog_params_color"
         android:textSize="14sp"
         tools:text="asdfasdf/asdfasdf" />
 
@@ -38,5 +38,5 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_below="@+id/clear"
-        android:background="@color/white" />
+        android:background="@color/flog_white" />
 </LinearLayout>

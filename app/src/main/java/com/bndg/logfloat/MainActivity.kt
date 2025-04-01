@@ -85,15 +85,15 @@ class MainActivity : AppCompatActivity(), OnHttpListener<Object> {
                     startActivity(intent)
                 } else {
                     //绘ui代码, 这里说明6.0系统已经有权限了
-                    startFloatView()
+                    launchFloatView()
                 }
             } else {
                 //绘ui代码,这里android6.0以下的系统直接绘出即可
-                startFloatView()
+                launchFloatView()
             }
         }
         btnStop?.setOnClickListener {
-            hideFloatView()
+            destroyFloatView()
         }
         btnUpload?.setOnClickListener {
             if (isUploading) {
@@ -206,7 +206,10 @@ class MainActivity : AppCompatActivity(), OnHttpListener<Object> {
 
     }
 
-    private fun hideFloatView() {
+    /**
+     * 关闭悬浮窗
+     */
+    private fun destroyFloatView() {
         val intent = Intent(
             this,
             FloatViewService::class.java
@@ -216,14 +219,18 @@ class MainActivity : AppCompatActivity(), OnHttpListener<Object> {
     }
 
     /**
-     * 开启浮动窗口
+     * 开启悬浮窗
      */
-    private fun startFloatView() {
+    private fun launchFloatView() {
         val intent = Intent(
             this,
             FloatViewService::class.java
         )
-        startService(intent)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent); // Android 8.0 及以上版本需使用此方法
+        } else {
+            startService(intent); // Android 8.0 以下版本
+        }
     }
 
 

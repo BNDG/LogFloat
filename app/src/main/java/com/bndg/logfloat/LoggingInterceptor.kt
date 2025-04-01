@@ -27,9 +27,9 @@ class LoggingInterceptor : Interceptor {
         val orginUrl = request.url().toString()
 
         // 忽略某个接口日志
-     /*   if (orginUrl.contains("file")) {
-            return chain.proceed(request)
-        }*/
+        /*   if (orginUrl.contains("file")) {
+               return chain.proceed(request)
+           }*/
         // 处理请求体
         val requestBody = request.body()
         val body = requestBody?.let { getBodyString(it) }
@@ -86,10 +86,7 @@ class LoggingInterceptor : Interceptor {
     private fun sendEvent(request: Request, requestBody: String?, responseBody: String?) {
         val results = responseBody ?: "" // 如果 responseBody 为 null，使用空字符串
         val originUrl = request.url().toString()
-
-        // 获取请求头中的 accessToken
-        val accessToken = request.header("accessToken")
-
+        val headers = request.headers()
         // URL 解码
         val url = try {
             URLDecoder.decode(originUrl, "UTF-8")
@@ -118,7 +115,7 @@ class LoggingInterceptor : Interceptor {
                 requestBodyJson,
                 hashValue,
                 results,
-                accessToken
+                headers.toString()
             )
         )
     }
