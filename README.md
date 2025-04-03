@@ -6,7 +6,7 @@
 - 仅用于测试环境。
 
 #### 使用说明
-> module引入或者implementation("io.github.bndg:floatlog:1.0.1")
+> module引入或者 `implementation("io.github.bndg:floatlog:1.0.2")`
 1. okhttp addInterceptor（示例中有个LoggingInterceptor）
 2. start FloatViewService (启动前台服务需要判断系统版本）
 3. 在Interceptor中，按需发送数据到悬浮窗

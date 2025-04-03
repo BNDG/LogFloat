@@ -72,4 +72,9 @@ class HttpLogAdapter(
         logEvents.add(event)
         notifyItemInserted(logEvents.size - 1)
     }
+
+    fun clearData() {
+        logEvents.clear()
+        notifyDataSetChanged()
+    }
 }

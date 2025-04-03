@@ -56,7 +56,7 @@ afterEvaluate {
             register<MavenPublication>("release") {
                 groupId = "io.github.bndg"
                 artifactId = "floatlog"
-                version = "1.0.1"
+                version = "1.0.2"
 
                 // 确保组件已初始化
                 from(components["release"])
@@ -113,7 +113,7 @@ afterEvaluate {
 medivhPublisher{
     groupId = "io.github.bndg"
     artifactId = "floatlog"
-    version = "1.0.1"
+    version = "1.0.2"
     pom{
         name = "floatlog"
         description = "android okhttp float log"

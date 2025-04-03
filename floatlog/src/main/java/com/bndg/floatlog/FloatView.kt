@@ -353,7 +353,7 @@ class FloatView(context: Context) : FrameLayout(context), OnTouchListener {
             }
         })
         tvClear?.setOnClickListener { v: View? ->
-            mAdapter!!.notifyDataSetChanged()
+            mAdapter?.clearData()
         }
         rvApiList?.setLayoutManager(LinearLayoutManager(context))
         mAdapter = HttpLogAdapter(mutableListOf(), { event: HttpLogEvent ->
